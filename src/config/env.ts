@@ -1,5 +1,3 @@
-/*Remember the one caveat I flagged about TypeScript: types are erased at compile time; they don't exist when the code runs. Environment variables are the perfect place to feel the danger, because env vars enter your program from the outside, at runtime — exactly where TypeScript is blind. */
-
 
 // Load .env into process.env BEFORE we read it. Node does NOT read .env files
 // on its own — dotenv is what makes that happen. This must run first, so it's
@@ -34,6 +32,20 @@ const envSchema = z.object({
 
   // Required. e.g. redis://host:6379
   REDIS_URL: z.string().url(),
+
+  // How long (seconds) a cached URL lives before Redis evicts it. 1 hour:
+  // long enough to absorb traffic on hot links, short enough to self-heal if a
+  // cache invalidation is ever missed.
+  CACHE_TTL_SECONDS: z.coerce.number().int().positive().default(3600),
+
+  // Short TTL for negative (not-found) cache entries.
+  NEGATIVE_CACHE_TTL_SECONDS: z.coerce.number().int().positive().default(30),
+
+  // How long a cache-rebuild lock is held before auto-expiring (ms).
+  LOCK_TTL_MS: z.coerce.number().int().positive().default(5000),
+
+  // How often buffered click counts are flushed from Redis to Postgres (ms).
+  CLICK_FLUSH_INTERVAL_MS: z.coerce.number().int().positive().default(10000),
 });
 
 // safeParse (not parse) so WE control the error output instead of getting a

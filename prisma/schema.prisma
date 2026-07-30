@@ -1,0 +1,25 @@
+// Prisma schema — the single source of truth for the data model.
+// From this file, Prisma generates (a) a type-safe client and (b) SQL migrations.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL") // Prisma reads this from .env automatically
+}
+
+// Maps to the "urls" table. Field names are camelCase in code; @map keeps the
+// actual columns snake_case (matching the assignment's SQL).
+model Url {
+  id             String    @id @default(uuid()) @db.Uuid
+  code           String    @unique @db.VarChar(20)
+  originalUrl    String    @map("original_url") // TEXT
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  expiresAt      DateTime? @map("expires_at") @db.Timestamp(6)
+  clickCount     BigInt    @default(0) @map("click_count") // BIGINT
+  lastAccessedAt DateTime? @map("last_accessed_at") @db.Timestamp(6)
+
+  @@map("urls")
+}
