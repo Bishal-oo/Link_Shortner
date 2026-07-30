@@ -1,0 +1,76 @@
+
+
+services:
+  # ---------------------------------------------------------------------------
+  # PostgreSQL — the durable source of truth.
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine # official image, pinned major version, small "alpine" variant
+    container_name: link-postgres
+    restart: unless-stopped
+    environment:
+      # These three create the DB + user on first startup. They MUST match the
+      # credentials in your DATABASE_URL (.env): linkuser / linkpass / linkshortener
+      POSTGRES_USER: linkuser
+      POSTGRES_PASSWORD: linkpass
+      POSTGRES_DB: linkshortener
+    ports:
+      # host:container — exposes Postgres on localhost:5432 so the app running
+      # on your machine (npm run dev) can reach it during development.
+      - "5432:5432"
+    volumes:
+      # Named volume: persists the database files even if the container is
+      # removed. Without this, "docker compose down" would wipe your data.
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      # "ready" = Postgres actually answers, not just "container launched".
+      test: ["CMD-SHELL", "pg_isready -U linkuser -d linkshortener"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # ---------------------------------------------------------------------------
+  # Redis — the fast, in-memory cache / counter / rate-limit store.
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: link-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"] # a healthy Redis replies "PONG"
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # ---------------------------------------------------------------------------
+  # app — our Express service, built from the Dockerfile in this repo.
+  # ---------------------------------------------------------------------------
+  app:
+    build: . # build the image using ./Dockerfile
+    container_name: link-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      LOG_LEVEL: info
+      # THE networking lesson: inside the compose network, the app reaches the
+      # datastores by their SERVICE NAME ("postgres", "redis") — NOT localhost.
+      # (Inside a container, "localhost" means the container itself, so the
+      #  localhost URLs from your .env would fail here.)
+      DATABASE_URL: postgres://linkuser:linkpass@postgres:5432/linkshortener
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      # Wait for BOTH datastores to report healthy before starting the app.
+      # This is what the healthchecks were for.
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+# Declares the named volume used above.
+volumes:
+  postgres-data:

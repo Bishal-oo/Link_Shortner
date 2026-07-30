@@ -1,0 +1,19 @@
+# Keep the build context small and never leak these into the image.
+
+# Host's installed modules — the image installs its own (correct-platform) copy.
+node_modules
+
+# Compiled output — the image builds its own.
+dist
+
+# Secrets — MUST NOT be baked into an image. Real values come from the
+# container environment (set by docker-compose), not from a file.
+.env
+.env.local
+.env.*.local
+
+# Git + misc
+.git
+.gitignore
+coverage
+*.log

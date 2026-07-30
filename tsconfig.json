@@ -1,0 +1,31 @@
+{
+  "compilerOptions": {
+    /* Output target: modern Node understands ES2022 natively. */
+    "target": "ES2022",
+    "lib": ["ES2022"],
+
+    /* ESM: NodeNext makes TS resolve modules exactly the way Node does at runtime. */
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+
+    /* Where source lives and where compiled JS goes. */
+    "rootDir": "src",
+    "outDir": "dist",
+
+    /* Strictness — this is where TS earns its keep. */
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+
+    /* Interop + ergonomics. */
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "declaration": false
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}
