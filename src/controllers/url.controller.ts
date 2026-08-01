@@ -3,20 +3,21 @@ import {
   createShortUrl,
   resolveForRedirect,
   getUrlStats,
+  updateUrl,
 } from "../services/url.service.js";
-import type { CreateUrlBody } from "../schemas/url.schema.js";
+import type { CreateUrlBody, UpdateUrlBody } from "../schemas/url.schema.js";
 
-/**
- * POST /urls — create a short link.
- *
- * The controller's ONLY job: read the (already-validated) request, call the
- * service, and shape the HTTP response. No business logic, no SQL.
- */
+// Controllers now only handle the SUCCESS path. Any error case (not found,
+// conflict, expired, validation) is thrown by the service/middleware and
+// formatted by the central error handler. Express 5 forwards async throws.
+
+/** POST /urls — create a short link. */
 export async function createUrl(req: Request, res: Response): Promise<void> {
   const body = req.body as CreateUrlBody;
 
   const url = await createShortUrl({
     originalUrl: body.originalUrl,
+    alias: body.alias,
     expiresAt: body.expiresAt ?? null,
   });
 
@@ -29,41 +30,42 @@ export async function createUrl(req: Request, res: Response): Promise<void> {
   });
 }
 
-/**
- * GET /:code — redirect to the original URL and count the click.
- */
+/** GET /:code — redirect to the original URL and count the click. */
 export async function redirectToCode(
   req: Request,
   res: Response,
 ): Promise<void> {
   const { code } = req.params as { code: string };
-  const result = await resolveForRedirect(code);
-
-  if (result.status === "not_found") {
-    res.status(404).json({ error: "NotFound", message: `No link for code '${code}'` });
-    return;
-  }
-  if (result.status === "expired") {
-    res.status(410).json({ error: "Gone", message: "This link has expired" });
-    return;
-  }
-
-  // 302 (NOT 301) so browsers don't cache the redirect — every click must reach
-  // us to be counted.
-  res.redirect(302, result.originalUrl);
+  const originalUrl = await resolveForRedirect(code);
+  // 302 (NOT 301) so browsers don't cache the redirect — every click counts.
+  res.redirect(302, originalUrl);
 }
 
-/**
- * GET /urls/:code/stats — return click analytics for a link.
- */
+/** GET /urls/:code/stats — click analytics for a link. */
 export async function getStats(req: Request, res: Response): Promise<void> {
   const { code } = req.params as { code: string };
   const stats = await getUrlStats(code);
-
-  if (!stats) {
-    res.status(404).json({ error: "NotFound", message: `No link for code '${code}'` });
-    return;
-  }
-
   res.json(stats);
+}
+
+/** PATCH /urls/:code — update a link's alias and/or expiry. */
+export async function updateUrlHandler(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  const { code } = req.params as { code: string };
+  const body = req.body as UpdateUrlBody;
+
+  const url = await updateUrl(code, {
+    alias: body.alias,
+    expiresAt: body.expiresAt,
+  });
+
+  res.json({
+    code: url.code,
+    originalUrl: url.originalUrl,
+    shortUrl: `${req.protocol}://${req.get("host")}/${url.code}`,
+    expiresAt: url.expiresAt,
+    createdAt: url.createdAt,
+  });
 }

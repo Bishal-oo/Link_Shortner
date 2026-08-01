@@ -1,0 +1,147 @@
+{
+  "info": {
+    "name": "Link Shortener API",
+    "description": "All routes for the link-shortener. The 'Create URL (random)' request saves the returned code into the {{code}} collection variable, so the redirect/stats/patch requests below it work automatically.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "code", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Create URL (random)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const json = pm.response.json();",
+              "if (json.code) { pm.collectionVariables.set('code', json.code); console.log('saved code =', json.code); }"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": { "raw": "{{baseUrl}}/urls", "host": ["{{baseUrl}}"], "path": ["urls"] },
+        "body": { "mode": "raw", "raw": "{\n  \"originalUrl\": \"https://example.com/some/very/long/path\"\n}", "options": { "raw": { "language": "json" } } }
+      }
+    },
+    {
+      "name": "Create URL (custom alias)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": { "raw": "{{baseUrl}}/urls", "host": ["{{baseUrl}}"], "path": ["urls"] },
+        "body": { "mode": "raw", "raw": "{\n  \"originalUrl\": \"https://example.com\",\n  \"alias\": \"mylink\"\n}", "options": { "raw": { "language": "json" } } }
+      }
+    },
+    {
+      "name": "Create URL (with expiry)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": { "raw": "{{baseUrl}}/urls", "host": ["{{baseUrl}}"], "path": ["urls"] },
+        "body": { "mode": "raw", "raw": "{\n  \"originalUrl\": \"https://example.com\",\n  \"expiresAt\": \"2030-01-01T00:00:00Z\"\n}", "options": { "raw": { "language": "json" } } }
+      }
+    },
+    {
+      "name": "Create URL (reserved alias -> 400)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": { "raw": "{{baseUrl}}/urls", "host": ["{{baseUrl}}"], "path": ["urls"] },
+        "body": { "mode": "raw", "raw": "{\n  \"originalUrl\": \"https://example.com\",\n  \"alias\": \"admin\"\n}", "options": { "raw": { "language": "json" } } }
+      }
+    },
+    {
+      "name": "Create URL (invalid url -> 400)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": { "raw": "{{baseUrl}}/urls", "host": ["{{baseUrl}}"], "path": ["urls"] },
+        "body": { "mode": "raw", "raw": "{\n  \"originalUrl\": \"not-a-url\"\n}", "options": { "raw": { "language": "json" } } }
+      }
+    },
+    {
+      "name": "Redirect (GET /:code)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/{{code}}", "host": ["{{baseUrl}}"], "path": ["{{code}}"] },
+        "description": "Turn OFF 'Automatically follow redirects' in Postman settings to see the raw 302 + Location header."
+      }
+    },
+    {
+      "name": "Stats (GET /urls/:code/stats)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/urls/{{code}}/stats", "host": ["{{baseUrl}}"], "path": ["urls", "{{code}}", "stats"] }
+      }
+    },
+    {
+      "name": "Update alias (PATCH)",
+      "request": {
+        "method": "PATCH",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": { "raw": "{{baseUrl}}/urls/{{code}}", "host": ["{{baseUrl}}"], "path": ["urls", "{{code}}"] },
+        "body": { "mode": "raw", "raw": "{\n  \"alias\": \"renamed\"\n}", "options": { "raw": { "language": "json" } } }
+      }
+    },
+    {
+      "name": "Update expiry (PATCH)",
+      "request": {
+        "method": "PATCH",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": { "raw": "{{baseUrl}}/urls/{{code}}", "host": ["{{baseUrl}}"], "path": ["urls", "{{code}}"] },
+        "body": { "mode": "raw", "raw": "{\n  \"expiresAt\": \"2030-01-01T00:00:00Z\"\n}", "options": { "raw": { "language": "json" } } }
+      }
+    },
+    {
+      "name": "Update empty (PATCH -> 400)",
+      "request": {
+        "method": "PATCH",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": { "raw": "{{baseUrl}}/urls/{{code}}", "host": ["{{baseUrl}}"], "path": ["urls", "{{code}}"] },
+        "body": { "mode": "raw", "raw": "{}", "options": { "raw": { "language": "json" } } }
+      }
+    },
+    {
+      "name": "Stats not found (-> 404)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/urls/nope/stats", "host": ["{{baseUrl}}"], "path": ["urls", "nope", "stats"] }
+      }
+    },
+    {
+      "name": "Health (liveness)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/health", "host": ["{{baseUrl}}"], "path": ["health"] }
+      }
+    },
+    {
+      "name": "Ready (readiness)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/ready", "host": ["{{baseUrl}}"], "path": ["ready"] }
+      }
+    },
+    {
+      "name": "Health with API key (high rate tier)",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "X-API-Key", "value": "demo-key-123" }],
+        "url": { "raw": "{{baseUrl}}/health", "host": ["{{baseUrl}}"], "path": ["health"] },
+        "description": "Sending X-API-Key puts you in the high-limit tier. Check the RateLimit-Limit header (600 vs 60)."
+      }
+    }
+  ]
+}

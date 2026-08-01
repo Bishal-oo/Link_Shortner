@@ -1,21 +1,15 @@
 import type { RequestHandler } from "express";
 import type { ZodType } from "zod";
+import { ValidationError } from "../errors/ValidationError.js";
 
 /**
- * Generic Zod validation middleware.
- *
- * Give it a schema shaped like `z.object({ body?, params?, query? })`. It runs
- * the matching parts of the request through Zod:
- *   - on FAILURE  -> responds 400 with the collected issues (safeParse, so we
- *                    control the response instead of throwing)
- *   - on SUCCESS  -> replaces req.body with the PARSED value (so coercions like
- *                    string->Date reach the controller) and calls next()
- *
- * Note: in Express 5, req.query and req.params are read-only getters, so we only
- * reassign req.body. Query/params are still validated — just not overwritten.
+ * Generic Zod validation middleware. Runs a schema against { body, params,
+ * query }; on failure it THROWS a ValidationError (the central handler turns it
+ * into a 400 with details); on success it replaces req.body with the parsed
+ * value. Only req.body is reassigned (Express 5 query/params are read-only).
  */
 export function validate(schema: ZodType): RequestHandler {
-  return (req, res, next) => {
+  return (req, _res, next) => {
     const result = schema.safeParse({
       body: req.body,
       params: req.params,
@@ -23,11 +17,10 @@ export function validate(schema: ZodType): RequestHandler {
     });
 
     if (!result.success) {
-      res.status(400).json({
-        error: "ValidationError",
-        details: result.error.flatten(),
-      });
-      return;
+      throw new ValidationError(
+        "Request validation failed",
+        result.error.flatten(),
+      );
     }
 
     const data = result.data as { body?: unknown };

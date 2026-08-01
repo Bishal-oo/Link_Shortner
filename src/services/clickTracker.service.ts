@@ -2,6 +2,7 @@ import { redis } from "../config/redis.js";
 import { env } from "../config/env.js";
 import { logger } from "../utils/logger.js";
 import { addClicks } from "../repositories/url.repository.js";
+import { Prisma } from "@prisma/client";
 
 const PENDING_SET = "clicks:pending";
 const clickKey = (code: string) => `clicks:${code}`;
@@ -36,7 +37,16 @@ export async function flushClicks(): Promise<void> {
     try {
       await addClicks(code, count);
     } catch (err) {
-      // Don't lose the count if the DB write fails — put it back for next time.
+      // If the URL no longer exists (renamed/deleted), the count can never be
+      // written — drop it rather than re-buffer forever (P2025 = record not found).
+      if (
+        err instanceof Prisma.PrismaClientKnownRequestError &&
+        err.code === "P2025"
+      ) {
+        logger.warn({ code, count }, "Dropping buffered clicks for missing URL");
+        continue;
+      }
+      // Otherwise it's likely transient — put the count back for next time.
       logger.error({ err, code, count }, "Flush failed; re-buffering clicks");
       await redis
         .multi()

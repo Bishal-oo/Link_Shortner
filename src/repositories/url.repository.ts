@@ -41,3 +41,20 @@ export async function addClicks(code: string, count: number): Promise<void> {
     },
   });
 }
+
+/**
+ * Update a URL's alias (code) and/or expiry. Only the fields that are provided
+ * (not undefined) are written — this is how PATCH does a partial update.
+ */
+export async function updateUrlRecord(
+  code: string,
+  data: { code?: string; expiresAt?: Date | null },
+): Promise<Url> {
+  return prisma.url.update({
+    where: { code },
+    data: {
+      ...(data.code !== undefined ? { code: data.code } : {}),
+      ...(data.expiresAt !== undefined ? { expiresAt: data.expiresAt } : {}),
+    },
+  });
+}

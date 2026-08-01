@@ -46,6 +46,11 @@ const envSchema = z.object({
 
   // How often buffered click counts are flushed from Redis to Postgres (ms).
   CLICK_FLUSH_INTERVAL_MS: z.coerce.number().int().positive().default(10000),
+
+  // Rate limiting: window length, and per-window request caps for each tier.
+  RATE_LIMIT_WINDOW_SEC: z.coerce.number().int().positive().default(60),
+  RATE_LIMIT_ANON_MAX: z.coerce.number().int().positive().default(60),
+  RATE_LIMIT_APIKEY_MAX: z.coerce.number().int().positive().default(600),
 });
 
 // safeParse (not parse) so WE control the error output instead of getting a
