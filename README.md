@@ -139,7 +139,10 @@ stop accepting new connections (server.close)
 | GET | `/health` | Liveness |
 | GET | `/ready` | Readiness (Postgres + Redis reachable) |
 
-Import `docs/postman_collection.json` into Postman for ready-made requests.
+Import `docs/postman_collection.json` into Postman for ready-made requests, and keep
+`POSTMAN_CHEATSHEET.md` open alongside it — it lists every request/response shape, the
+error cases, the rate-limit tiers, and a suggested demo order that shows the caching
+behavior live (miss → hit, live click count, rename invalidation, negative cache, 429).
 
 ## Caching Strategy
 
@@ -175,8 +178,11 @@ cleans up its data.
 
 ## Further Docs
 
+- `POSTMAN_CHEATSHEET.md` — every endpoint's request/response, error shapes, and a demo script.
 - `docs/WALKTHROUGH.md` — architecture, tech decisions, file-by-file roles.
-- `docs/CODE_GUIDE.md` — TypeScript syntax primer + line-by-line walkthrough.
+- `docs/CACHING_STRATEGY.md` — deep dive on cache-aside, negative cache, stampede lock, click buffering.
+- `docs/CODE_GUIDE.md` — line-by-line walkthrough of the codebase.
+- `docs/typescript-concepts.md` — TypeScript syntax primer for the patterns used here.
 - `docs/postman_collection.json` — importable API requests.
 
 ## Status
