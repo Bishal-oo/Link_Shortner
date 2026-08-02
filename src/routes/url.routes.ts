@@ -4,7 +4,7 @@ import {
   createUrlSchema,
   updateUrlSchema,
   codeParamsSchema,
-} from "@/schemas/url.schema";
+} from "@/types/url.schema";
 import {
   createUrl,
   redirectToCode,

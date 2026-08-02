@@ -5,7 +5,7 @@ import {
   getUrlStats,
   updateUrl,
 } from "@/services/url.service";
-import type { CreateUrlBody, UpdateUrlBody } from "@/schemas/url.schema";
+import type { CreateUrlBody, UpdateUrlBody } from "@/types/url.schema";
 
 // Controllers now only handle the SUCCESS path. Any error case (not found,
 // conflict, expired, validation) is thrown by the service/middleware and
