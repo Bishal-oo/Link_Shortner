@@ -1,8 +1,8 @@
 import type { Request, RequestHandler } from "express";
-import { redis } from "../config/redis.js";
-import { env } from "../config/env.js";
-import { logger } from "../utils/logger.js";
-import { RateLimitError } from "../errors/RateLimitError.js";
+import { redis } from "@/config/redis";
+import { env } from "@/config/env";
+import { logger } from "@/utils/logger";
+import { RateLimitError } from "@/errors/RateLimitError";
 
 /**
  * Atomically increment the counter and, on the FIRST hit of a window, set its

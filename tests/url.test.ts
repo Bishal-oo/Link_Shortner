@@ -1,8 +1,8 @@
 import { describe, it, expect, afterAll } from "@jest/globals";
 import request from "supertest";
-import { createApp } from "../src/app.js";
-import { prisma } from "../src/config/db.js";
-import { redis } from "../src/config/redis.js";
+import { createApp } from "@/app";
+import { prisma } from "@/config/db";
+import { redis } from "@/config/redis";
 
 // NOTE: this is an INTEGRATION test — it exercises the real app against the real
 // Postgres and Redis from docker-compose. Make sure the datastores are running

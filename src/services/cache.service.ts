@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
-import { redis } from "../config/redis.js";
-import { env } from "../config/env.js";
+import { redis } from "@/config/redis";
+import { env } from "@/config/env";
 
 const urlKey = (code: string) => `url:${code}`;
 const lockKey = (code: string) => `lock:${code}`;
@@ -19,11 +19,7 @@ export interface CachedUrl {
   expiresAt: string | null;
 }
 
-export type CacheLookup =
-  | { state: "hit"; value: CachedUrl }
-  | { state: "negative" } // we know this code does not exist
-  | { state: "miss" }; //     nothing cached — must ask the DB
-
+export type CacheLookup =|{ state: "hit"; value: CachedUrl }| { state: "negative" } | { state: "miss" }; 
 /** Read from cache: hit (value), negative (known-missing), or miss. */
 export async function lookupCache(code: string): Promise<CacheLookup> {
   const raw = await redis.get(urlKey(code));

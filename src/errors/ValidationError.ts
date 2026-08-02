@@ -1,4 +1,4 @@
-import { AppError } from "./AppError.js";
+import { AppError } from "@/errors/AppError";
 
 export class ValidationError extends AppError {
   readonly details: unknown;

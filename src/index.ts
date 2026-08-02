@@ -1,13 +1,13 @@
 import type { Server } from "node:http";
-import { createApp } from "./app.js";
-import { logger } from "./utils/logger.js";
-import { env } from "./config/env.js";
-import { prisma } from "./config/db.js";
-import { redis } from "./config/redis.js";
+import { createApp } from "@/app";
+import { logger } from "@/utils/logger";
+import { env } from "@/config/env";
+import { prisma } from "@/config/db";
+import { redis } from "@/config/redis";
 import {
   startClickFlush,
   stopClickFlush,
-} from "./services/clickTracker.service.js";
+} from "@/services/clickTracker.service";
 
 async function main() {
   // Fail fast: verify both datastores before we accept any traffic.

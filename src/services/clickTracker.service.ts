@@ -1,7 +1,7 @@
-import { redis } from "../config/redis.js";
-import { env } from "../config/env.js";
-import { logger } from "../utils/logger.js";
-import { addClicks } from "../repositories/url.repository.js";
+import { redis } from "@/config/redis";
+import { env } from "@/config/env";
+import { logger } from "@/utils/logger";
+import { addClicks } from "@/repositories/url.repository";
 import { Prisma } from "@prisma/client";
 
 const PENDING_SET = "clicks:pending";
@@ -10,12 +10,15 @@ const clickKey = (code: string) => `clicks:${code}`;
 /**
  * Buffer a click in Redis: atomic INCR of the code's counter + mark the code as
  * "pending" so the flush job knows to persist it. One pipelined round-trip.
+ * As we do not have select where to know which counters not saved
  */
 export async function recordClick(code: string): Promise<void> {
   await redis.multi().incr(clickKey(code)).sadd(PENDING_SET, code).exec();
 }
 
-/** Un-flushed click count for a code — lets stats stay live between flushes. */
+/** Un-flushed click count for a code — lets stats stay live between flushes. 
+ * after flush if again hit to get live stats
+*/
 export async function getPendingClicks(code: string): Promise<number> {
   const n = await redis.get(clickKey(code));
   return n ? Number(n) : 0;
@@ -48,6 +51,8 @@ export async function flushClicks(): Promise<void> {
       }
       // Otherwise it's likely transient — put the count back for next time.
       logger.error({ err, code, count }, "Flush failed; re-buffering clicks");
+      
+      // clicks may keep arriving after getdel so use INCRBY
       await redis
         .multi()
         .incrby(clickKey(code), count)

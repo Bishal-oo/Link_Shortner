@@ -1,4 +1,4 @@
-import { AppError } from "./AppError.js";
+import { AppError } from "@/errors/AppError";
 
 export class RateLimitError extends AppError {
   readonly retryAfter: number; // seconds until the caller may retry

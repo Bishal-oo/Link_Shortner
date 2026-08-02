@@ -1,6 +1,6 @@
 import pino from "pino";
-import { env } from "../config/env.js";
-import { getReqId } from "./requestContext.js";
+import { env } from "@/config/env";
+import { getReqId } from "@/utils/requestContext";
 
 /**
  * The single shared pino logger.

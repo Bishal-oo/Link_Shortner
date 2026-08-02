@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { RequestHandler } from "express";
-import { logger } from "../utils/logger.js";
-import { requestContext } from "../utils/requestContext.js";
+import { logger } from "@/utils/logger";
+import { requestContext } from "@/utils/requestContext";
 
 /**
  * Assigns a correlation id to each request and logs its start and completion.
@@ -14,6 +14,7 @@ export const requestLogger: RequestHandler = (req, res, next) => {
   res.setHeader("X-Request-Id", reqId);
 
   requestContext.run({ reqId }, () => {
+    // (hrtime.bigint() is a high-precision nanosecond clock
     const startNs = process.hrtime.bigint();
     logger.info(
       { method: req.method, url: req.originalUrl },

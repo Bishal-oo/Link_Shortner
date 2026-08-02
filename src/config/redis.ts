@@ -2,8 +2,8 @@
 // import: `import Redis from "ioredis"` resolves to the (non-constructable)
 // module namespace, whereas `{ Redis }` gives the actual client class.
 import { Redis } from "ioredis";
-import { env } from "./env.js";
-import { logger } from "../utils/logger.js";
+import { env } from "@/config/env";
+import { logger } from "@/utils/logger";
 
 /**
  * ONE shared Redis client for the whole app.

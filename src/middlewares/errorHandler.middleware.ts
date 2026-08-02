@@ -1,8 +1,8 @@
 import type { ErrorRequestHandler } from "express";
-import { AppError } from "../errors/AppError.js";
-import { ValidationError } from "../errors/ValidationError.js";
-import { RateLimitError } from "../errors/RateLimitError.js";
-import { logger } from "../utils/logger.js";
+import { AppError } from "@/errors/AppError";
+import { ValidationError } from "@/errors/ValidationError";
+import { RateLimitError } from "@/errors/RateLimitError";
+import { logger } from "@/utils/logger";
 
 /**
  * The single place errors become HTTP responses. Registered LAST. Express 5

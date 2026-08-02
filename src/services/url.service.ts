@@ -5,7 +5,7 @@ import {
   findByCode,
   updateUrlRecord,
   type Url,
-} from "../repositories/url.repository.js";
+} from "@/repositories/url.repository";
 import {
   lookupCache,
   cacheUrl,
@@ -14,12 +14,12 @@ import {
   acquireRebuildLock,
   releaseRebuildLock,
   type CachedUrl,
-} from "./cache.service.js";
-import { recordClick, getPendingClicks } from "./clickTracker.service.js";
-import { logger } from "../utils/logger.js";
-import { NotFoundError } from "../errors/NotFoundError.js";
-import { ConflictError } from "../errors/ConflictError.js";
-import { GoneError } from "../errors/GoneError.js";
+} from "@/services/cache.service";
+import { recordClick, getPendingClicks } from "@/services/clickTracker.service";
+import { logger } from "@/utils/logger";
+import { NotFoundError } from "@/errors/NotFoundError";
+import { ConflictError } from "@/errors/ConflictError";
+import { GoneError } from "@/errors/GoneError";
 
 const CODE_LENGTH = 7; // 64^7 ≈ 4.4 trillion possibilities
 const MAX_ATTEMPTS = 5;

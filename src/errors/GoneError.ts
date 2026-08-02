@@ -1,4 +1,4 @@
-import { AppError } from "./AppError.js";
+import { AppError } from "@/errors/AppError";
 
 export class GoneError extends AppError {
   constructor(message = "Gone") {

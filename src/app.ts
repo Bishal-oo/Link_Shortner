@@ -1,10 +1,10 @@
 import express from "express";
-import { healthRouter } from "./routes/health.routes.js";
-import { urlRouter } from "./routes/url.routes.js";
-import { requestLogger } from "./middlewares/requestLogger.middleware.js";
-import { rateLimiter } from "./middlewares/rateLimiter.middleware.js";
-import { errorHandler } from "./middlewares/errorHandler.middleware.js";
-import { NotFoundError } from "./errors/NotFoundError.js";
+import { healthRouter } from "@/routes/health.routes";
+import { urlRouter } from "@/routes/url.routes";
+import { requestLogger } from "@/middlewares/requestLogger.middleware";
+import { rateLimiter } from "@/middlewares/rateLimiter.middleware";
+import { errorHandler } from "@/middlewares/errorHandler.middleware";
+import { NotFoundError } from "@/errors/NotFoundError";
 
 /**
  * Builds and configures the Express application (a factory, so tests can create

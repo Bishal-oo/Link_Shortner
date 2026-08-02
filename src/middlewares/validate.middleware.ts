@@ -1,6 +1,6 @@
 import type { RequestHandler } from "express";
 import type { ZodType } from "zod";
-import { ValidationError } from "../errors/ValidationError.js";
+import { ValidationError } from "@/errors/ValidationError";
 
 /**
  * Generic Zod validation middleware. Runs a schema against { body, params,

@@ -4,9 +4,11 @@
     "target": "ES2022",
     "lib": ["ES2022"],
 
-    /* ESM: NodeNext makes TS resolve modules exactly the way Node does at runtime. */
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    /* ESM with bundler-style resolution: tsup (esbuild) builds dist, so we can
+       use "@/*" path aliases and drop file extensions in imports. */
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "paths": { "@/*": ["./src/*"] },
 
     /* Where source lives and where compiled JS goes. */
     "rootDir": "src",

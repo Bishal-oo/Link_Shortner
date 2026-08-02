@@ -1,16 +1,16 @@
 import { Router } from "express";
-import { validate } from "../middlewares/validate.middleware.js";
+import { validate } from "@/middlewares/validate.middleware";
 import {
   createUrlSchema,
   updateUrlSchema,
   codeParamsSchema,
-} from "../schemas/url.schema.js";
+} from "@/schemas/url.schema";
 import {
   createUrl,
   redirectToCode,
   getStats,
   updateUrlHandler,
-} from "../controllers/url.controller.js";
+} from "@/controllers/url.controller";
 
 export const urlRouter = Router();
 

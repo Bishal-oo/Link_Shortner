@@ -1,4 +1,4 @@
-import { prisma } from "../config/db.js";
+import { prisma } from "@/config/db";
 import type { Url } from "@prisma/client";
 
 // Re-export the Prisma-generated `Url` type so the rest of the app imports it
