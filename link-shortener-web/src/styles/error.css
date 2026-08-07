@@ -1,0 +1,9 @@
+/* ErrorBanner */
+.error-banner {
+  background: var(--danger-bg);
+  border: 1px solid var(--danger-border);
+  color: #b91c1c;
+  padding: 10px 12px;
+  border-radius: 8px;
+  margin: 12px 0;
+}

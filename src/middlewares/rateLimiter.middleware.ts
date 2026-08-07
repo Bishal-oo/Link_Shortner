@@ -17,6 +17,7 @@ end
 return { current, redis.call("PTTL", KEYS[1]) }
 `;
 
+
 interface Tier {
   name: string;
   max: number;

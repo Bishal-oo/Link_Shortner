@@ -20,6 +20,7 @@ const RESERVED_ALIASES = new Set([
   "robots.txt",
 ]);
 
+
 /**
  * A custom alias: URL-safe characters only, 1–20 chars (matches VARCHAR(20)),
  * and not a reserved word. Reused by both create and update.
@@ -32,7 +33,7 @@ const aliasSchema = z
   .refine((a) => !RESERVED_ALIASES.has(a.toLowerCase()), {
     message: "this alias is reserved and cannot be used",
   });
-  // custom validation msg refine
+// custom validation msg refine
 
 /**
  * An expiry that must be in the FUTURE. Since createdAt is "now" at creation
@@ -80,3 +81,15 @@ export const codeParamsSchema = z.object({
     code: z.string().min(1).max(20),
   }),
 });
+
+/**
+ * GET /urls?page=&pageSize= — pagination query. Flat (not wrapped in `query`)
+ * because the controller parses req.query directly: Express 5 query is
+ * read-only, so the validate middleware can't persist the coerced numbers.
+ * z.coerce turns the "?page=2" strings into numbers; defaults fill the rest.
+ */
+export const listQuerySchema = z.object({
+  page: z.coerce.number().int().positive().default(1),
+  pageSize: z.coerce.number().int().positive().max(100).default(20),
+});
+export type ListQuery = z.infer<typeof listQuerySchema>;

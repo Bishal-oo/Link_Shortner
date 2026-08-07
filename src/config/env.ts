@@ -51,6 +51,19 @@ const envSchema = z.object({
   RATE_LIMIT_WINDOW_SEC: z.coerce.number().int().positive().default(60),
   RATE_LIMIT_ANON_MAX: z.coerce.number().int().positive().default(60),
   RATE_LIMIT_APIKEY_MAX: z.coerce.number().int().positive().default(600),
+
+  // Secrect key
+  JWT_SECRECT: z.string().min(32),
+
+  // Token lifetime
+  JWT_EXPIRES_IN: z.string().default("1d"),
+
+
+  // ----Quota
+  QUOTA_MAX: z.coerce.number().int().positive().default(10),
+
+  QUOTA_REFILL_HOURS: z.coerce.number().int().positive().default(24)
+
 });
 
 // safeParse (not parse) so WE control the error output instead of getting a

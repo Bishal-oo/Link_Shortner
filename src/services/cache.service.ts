@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { redis } from "@/config/redis";
 import { env } from "@/config/env";
+import { redisSafe } from "@/utils/redisSafe";
 
 const urlKey = (code: string) => `url:${code}`;
 const lockKey = (code: string) => `lock:${code}`;
@@ -20,9 +21,14 @@ export interface CachedUrl {
 }
 
 export type CacheLookup =|{ state: "hit"; value: CachedUrl }| { state: "negative" } | { state: "miss" }; 
-/** Read from cache: hit (value), negative (known-missing), or miss. */
+/** Read from cache: hit (value), negative (known-missing), or miss.
+ * If Redis is unreachable, degrade to a miss so the caller queries Postgres. */
 export async function lookupCache(code: string): Promise<CacheLookup> {
-  const raw = await redis.get(urlKey(code));
+  const raw = await redisSafe(
+    () => redis.get(urlKey(code)),
+    null,
+    "Redis unavailable on cache lookup — treating as miss",
+  );
   if (raw === null) return { state: "miss" };
   if (raw === NEGATIVE) return { state: "negative" };
   try {
@@ -32,13 +38,13 @@ export async function lookupCache(code: string): Promise<CacheLookup> {
   }
 }
 
-/** Cache a real URL with the normal TTL. */
+/** Cache a real URL with the normal TTL. No-op if Redis is unreachable. */
 export async function cacheUrl(code: string, value: CachedUrl): Promise<void> {
-  await redis.set(
-    urlKey(code),
-    JSON.stringify(value),
-    "EX",
-    env.CACHE_TTL_SECONDS,
+  await redisSafe(
+    () =>
+      redis.set(urlKey(code), JSON.stringify(value), "EX", env.CACHE_TTL_SECONDS),
+    null,
+    "Redis unavailable on cacheUrl — skipping write",
   );
 }
 
@@ -48,17 +54,21 @@ export async function cacheUrl(code: string, value: CachedUrl): Promise<void> {
  * later isn't stuck returning 404 for long.
  */
 export async function cacheNegative(code: string): Promise<void> {
-  await redis.set(
-    urlKey(code),
-    NEGATIVE,
-    "EX",
-    env.NEGATIVE_CACHE_TTL_SECONDS,
+  await redisSafe(
+    () => redis.set(urlKey(code), NEGATIVE, "EX", env.NEGATIVE_CACHE_TTL_SECONDS),
+    null,
+    "Redis unavailable on cacheNegative — skipping write",
   );
 }
 
-/** Remove any cached entry (real or negative) — used on create/update/delete. */
+/** Remove any cached entry (real or negative) — used on create/update/delete.
+ * No-op if Redis is unreachable; Postgres remains the source of truth. */
 export async function invalidateUrl(code: string): Promise<void> {
-  await redis.del(urlKey(code));
+  await redisSafe(
+    () => redis.del(urlKey(code)),
+    0,
+    "Redis unavailable on invalidateUrl — skipping delete",
+  );
 }
 
 /**
@@ -68,7 +78,14 @@ export async function invalidateUrl(code: string): Promise<void> {
  */
 export async function acquireRebuildLock(code: string): Promise<string | null> {
   const token = randomUUID();
-  const ok = await redis.set(lockKey(code), token, "PX", env.LOCK_TTL_MS, "NX");
+  // On a Redis outage, hand back the token so the caller rebuilds directly from
+  // Postgres. Stampede protection only matters when the cache is up, and a
+  // fallback release() below is a harmless no-op.
+  const ok = await redisSafe(
+    () => redis.set(lockKey(code), token, "PX", env.LOCK_TTL_MS, "NX"),
+    "OK",
+    "Redis unavailable acquiring rebuild lock — rebuilding from DB",
+  );
   return ok === "OK" ? token : null;
 }
 
@@ -83,5 +100,9 @@ export async function releaseRebuildLock(
 ): Promise<void> {
   const lua =
     'if redis.call("get", KEYS[1]) == ARGV[1] then return redis.call("del", KEYS[1]) else return 0 end';
-  await redis.eval(lua, 1, lockKey(code), token);
+  await redisSafe(
+    () => redis.eval(lua, 1, lockKey(code), token),
+    0,
+    "Redis unavailable releasing rebuild lock — skipping",
+  );
 }

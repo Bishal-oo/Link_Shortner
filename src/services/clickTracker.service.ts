@@ -1,6 +1,7 @@
 import { redis } from "@/config/redis";
 import { env } from "@/config/env";
 import { logger } from "@/utils/logger";
+import { redisSafe } from "@/utils/redisSafe";
 import { addClicks } from "@/repositories/url.repository";
 import { Prisma } from "@prisma/client";
 
@@ -13,14 +14,24 @@ const clickKey = (code: string) => `clicks:${code}`;
  * As we do not have select where to know which counters not saved
  */
 export async function recordClick(code: string): Promise<void> {
-  await redis.multi().incr(clickKey(code)).sadd(PENDING_SET, code).exec();
+  // A redirect must succeed even if Redis is down — dropping a click count is an
+  // acceptable loss, breaking the redirect is not.
+  await redisSafe(
+    () => redis.multi().incr(clickKey(code)).sadd(PENDING_SET, code).exec(),
+    null,
+    "Redis unavailable on recordClick — dropping click",
+  );
 }
 
 /** Un-flushed click count for a code — lets stats stay live between flushes. 
  * after flush if again hit to get live stats
 */
 export async function getPendingClicks(code: string): Promise<number> {
-  const n = await redis.get(clickKey(code));
+  const n = await redisSafe(
+    () => redis.get(clickKey(code)),
+    null,
+    "Redis unavailable on getPendingClicks — reporting 0 pending",
+  );
   return n ? Number(n) : 0;
 }
 

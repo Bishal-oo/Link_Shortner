@@ -1,0 +1,23 @@
+/* CreateLinkPage result card */
+.card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  background: var(--surface);
+  margin-top: 16px;
+}
+.card-label {
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: 14px;
+}
+.short-link {
+  font-family: var(--mono);
+  font-size: 18px;
+}
+.row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}

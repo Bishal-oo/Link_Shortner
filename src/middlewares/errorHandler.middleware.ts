@@ -10,7 +10,7 @@ import { logger } from "@/utils/logger";
  */
 export const errorHandler: ErrorRequestHandler = (err, _req, res, next) => {
   // If the response already started, we can't change the status — defer to
-  // Express's default handler to close the connection.
+  // Express's default handler. to close the connection.
   if (res.headersSent) {
     next(err);
     return;

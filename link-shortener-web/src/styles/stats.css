@@ -1,0 +1,23 @@
+/* LinkStatsPage tiles */
+.stat-tiles {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 16px 0;
+}
+.stat-tile {
+  flex: 1 1 120px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  text-align: center;
+  background: var(--surface);
+}
+.stat-value {
+  font-size: 24px;
+  font-weight: 700;
+}
+.stat-label {
+  color: var(--muted);
+  font-size: 13px;
+}

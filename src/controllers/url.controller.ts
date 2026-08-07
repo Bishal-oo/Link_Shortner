@@ -4,8 +4,12 @@ import {
   resolveForRedirect,
   getUrlStats,
   updateUrl,
+  listShortUrls,
+  deleteShortUrl,
 } from "@/services/url.service";
 import type { CreateUrlBody, UpdateUrlBody } from "@/types/url.schema";
+import { listQuerySchema } from "@/types/url.schema";
+import { ValidationError } from "@/errors/ValidationError";
 
 // Controllers now only handle the SUCCESS path. Any error case (not found,
 // conflict, expired, validation) is thrown by the service/middleware and
@@ -68,4 +72,44 @@ export async function updateUrlHandler(
     expiresAt: url.expiresAt,
     createdAt: url.createdAt,
   });
+}
+
+/** GET /urls?page=&pageSize= — a paginated list of links, newest first. */
+export async function listUrls(req: Request, res: Response): Promise<void> {
+  // Parse the query here (not via validate middleware): Express 5 query is
+  // read-only, so coerced numbers wouldn't survive. safeParse coerces + applies
+  // defaults; invalid input (page=abc, page=-1) becomes a 400 ValidationError.
+  const parsed = listQuerySchema.safeParse(req.query);
+  if (!parsed.success) {
+    throw new ValidationError(
+      "Request validation failed",
+      parsed.error.flatten(),
+    );
+  }
+  const { page, pageSize } = parsed.data;
+
+  const result = await listShortUrls({ page, pageSize });
+
+  res.json({
+    items: result.items.map((url) => ({
+      code: url.code,
+      originalUrl: url.originalUrl,
+      shortUrl: `${req.protocol}://${req.get("host")}/${url.code}`,
+      createdAt: url.createdAt,
+      expiresAt: url.expiresAt,
+    })),
+    total: result.total,
+    page: result.page,
+    pageSize: result.pageSize,
+  });
+}
+
+/** DELETE /urls/:code — remove a link. Returns 204 No Content on success. */
+export async function deleteUrlHandler(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  const { code } = req.params as { code: string };
+  await deleteShortUrl(code);
+  res.status(204).send();
 }

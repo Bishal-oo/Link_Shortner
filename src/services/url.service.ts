@@ -4,6 +4,8 @@ import {
   insertUrl,
   findByCode,
   updateUrlRecord,
+  listUrlRecords,
+  deleteUrlRecord,
   type Url,
 } from "@/repositories/url.repository";
 import {
@@ -115,6 +117,8 @@ async function resolveCachedUrl(
   }
   logger.debug({ code }, "cache miss");
 
+
+  // if redis down then token is null go to the db
   const token = await acquireRebuildLock(code);
   if (token) {
     try {
@@ -211,4 +215,32 @@ export async function updateUrl(
     }
     throw err;
   }
+}
+
+export interface UrlListPage {
+  items: Url[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+/** List links newest-first, paginated. */
+export async function listShortUrls(args: {
+  page: number;
+  pageSize: number;
+}): Promise<UrlListPage> {
+  const skip = (args.page - 1) * args.pageSize;
+  const { rows, total } = await listUrlRecords({ skip, take: args.pageSize });
+  return { items: rows, total, page: args.page, pageSize: args.pageSize };
+}
+
+/**
+ * Delete a link. Throws NotFoundError if the code doesn't exist, and clears the
+ * cache so a just-deleted link is never served from Redis.
+ */
+export async function deleteShortUrl(code: string): Promise<void> {
+  const existing = await findByCode(code);
+  if (!existing) throw new NotFoundError(`No link for code '${code}'`);
+  await deleteUrlRecord(code);
+  await invalidateUrl(code);
 }
